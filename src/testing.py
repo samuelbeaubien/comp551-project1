@@ -1,20 +1,23 @@
 import numpy
 
+x = numpy.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
 
+for row in x:
+    print (row)
 
-b = numpy.array([[[8, 9]], [2], [3]])
+# b = numpy.array([[[8, 9]], [2], [3]])
 
-print (b)
+# print (b)
 
-a = numpy.array([1, 2, 3])
+# a = numpy.array([1, 2, 3])
 
-print (a.shape)
+# print (a.shape)
 
-a = a.transpose()
+# a = a.transpose()
 
-a = a.transpose()
+# a = a.transpose()
 
-print (a)
+# print (a)
 
 # x = numpy.array([[1, 2, 3], [4, 5, 6]])
 
