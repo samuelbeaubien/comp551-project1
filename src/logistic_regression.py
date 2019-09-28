@@ -1,11 +1,7 @@
-import numpy
+import numpy as np
 import math
 
-
 class LogisticRegression:
-
-
-
 
     @staticmethod
     def log_odds(features, weights):
@@ -16,16 +12,16 @@ class LogisticRegression:
             weights {numpy.ndarray dim=1} -- Weights used in the linear regression model
         
         Raises:
-            ValueError: If the dimension of the inputs is not 1 (row vector)
+            ValueError: If the dimension of the inputs is not 1 (cur_row vector)
         
         Returns:
             float -- result of the log-odd ratio
         """
-        # Check that features and weights are row vectors (i.e [[x, x, x, x, x ,x]])
+        # Check that features and weights are cur_row vectors (i.e [[x, x, x, x, x ,x]])
         if (weights.ndim != 1 or features.ndim != 1):
             raise ValueError()
         # Calculate the log-odd
-        return numpy.dot(weights, features)
+        return np.dot(weights, features)
 
     @staticmethod
     def logistic_func(features, weights):
@@ -40,53 +36,51 @@ class LogisticRegression:
         Returns:
             float -- probability of the output being true (from 0 to 1)
         """
-        return 1/(1 + math.exp(LogisticRegression.log_odds(features, weights)))
+        try:
+            return 1/(1 + math.exp(LogisticRegression.log_odds(features, weights)))
+        except:
+            # In case of overflow, the log-odds is basically 0
+            return 1/(1 + math.exp(0))
 
     @staticmethod
-    def fit(data_set, weights, step_size, max_iterations, max_w_diff):
-        """ wk+1 = wk + αk ∑i=1:n xi (yi – σ(wkTxi))
-            
+    def fit(x_features, y_outcomes, learning_rate, max_iterations, max_iter_diff):
+        """ Fit using logistic regression
         
+        wk+1 = wk + αk ∑i=1:n xi (yi – σ(wkTxi))
+            
         Arguments:      
-            data_set {numpy.ndarray dim = 2} -- Set of different training examples.
+            x_features {numpy.ndarray dim = 2} -- Set of different training examples.
+            y_outcomes {numpy.ndarray dim = 1} -- Outcomes
             weights {numpy.ndarray dim = 1} -- Weights used in the linear regression.
-            step_size {float} -- Step size of the gradient descent.
+            learning_rate {float} -- Step size of the gradient descent.
             max_iterations {int} -- Maximum number of iterations that the gradient descent algorithm
                 will perform.
-            max_w_diff {float} -- Max weight difference allowed in order to terminate the algorithm.
+            max_iter_diff {float} -- Max weight difference allowed in order to terminate the algorithm.
 
         """
+        weights = np.ones(x_features.shape[1] + 1)
         # Make sure that all arguments are floats
-        data_set = data_set.astype(float)
+        x_features = x_features.astype(float)
+        y_outcomes = y_outcomes.astype(float)
         weights = weights.astype(float)
-        
         # Prepare initial conditions to ensure at least one iteration
-        current_weights = weights
+        cur_weights = weights
         old_weights = None
         num_iterations = 0
-        w_diff = max_w_diff*2
-        
-        while (num_iterations < max_iterations) and (w_diff > max_w_diff):
-            old_weights = current_weights
-            update_sum = numpy.zeros_like(old_weights)
-
-            # ∑i=1:n xi (yi – σ(wkTxi))
-            for row in data_set:
-                # Get outcome (y)
-                y = row[-1] 
-                # Get the features
-                features = row[:-1]
-                # Add intercept term of value "1" so that features and weights vectors have the same 
-                # length when adding them together
-                features = numpy.concatenate(([1.0], features))
-                # Compute gradient with features
-                update_sum += features * (y - LogisticRegression.logistic_func(features, weights))
-            
-            # Add the step_size
-            update_sum =  update_sum * step_size
-            current_weights = old_weights + update_sum
+        iter_diff = max_iter_diff*2
+        # Every iterations modifies the weights
+        while (num_iterations < max_iterations) and (iter_diff > max_iter_diff):
+            old_weights = cur_weights
+            update_sum = np.zeros_like(old_weights)
+            # ∑ xi(yi – σ(wkTxi))
+            for cur_row,cur_y in zip(x_features, y_outcomes):
+                # Add intercept term of value "1" so that features and weights vectors have same length when adding them together
+                cur_row = np.concatenate(([1.0], cur_row))
+                update_sum += cur_row * (cur_y - LogisticRegression.logistic_func(cur_row, old_weights))
+            # Add the learning_rate
+            cur_weights = old_weights - (update_sum * learning_rate)
             num_iterations += 1
-            w_diff = abs(numpy.sum(old_weights - current_weights))
-        return current_weights
+            iter_diff = abs(np.sum(old_weights - cur_weights))
+        return cur_weights
 
             
